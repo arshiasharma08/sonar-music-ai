@@ -1,573 +1,548 @@
 /* ============================================================================
-   SONAR · AI MUSIC INTELLIGENCE — FRONTEND
-   Talks to existing Flask backend (/api/search, /api/recommend, /api/battle,
-   /api/moods, /api/analytics, /api/insights). No backend changes.
-   ============================================================================ */
+   SONAR · MUSIC INTELLIGENCE PLATFORM
+   Interactive JavaScript
+   ========================================================================== */
 
+// ============================================================================
+// STATE
+// ============================================================================
 const state = {
-    songs: [],
-    allMoods: {},
-    selectedSong: null,
-    selectedMood: null,
-    analytics: null,
+  currentSong: null,
+  recommendations: [],
+  moods: {},
+  analytics: null,
+  songs: []
 };
 
-const MOOD_EMOJI = {
-    'Gym Energy': '💪', 'Party Vibes': '🎉', 'Energetic': '⚡',
-    'Feel-Good': '😊', 'Study Session': '📚', 'Chilled': '❄️',
-    'Summer Vibes': '☀️', 'Late Night': '🌙', 'Melancholy': '🌧️',
-    'Focus Mode': '🎯',
+// ============================================================================
+// DOM ELEMENTS
+// ============================================================================
+const elements = {
+  searchInput: document.getElementById('searchInput'),
+  searchBtn: document.getElementById('searchBtn'),
+  suggestions: document.querySelectorAll('.suggestion'),
+  resultsList: document.getElementById('resultsList'),
+  resultsSection: document.getElementById('resultsSection'),
+  resultsCount: document.getElementById('resultsCount'),
+  selectedSongCard: document.getElementById('selectedSongCard'),
+  selectedSection: document.getElementById('selectedSection'),
+  recommendationsList: document.getElementById('recommendationsList'),
+  recommendationsSection: document.getElementById('recommendations'),
+  moodsList: document.getElementById('moodsList'),
+  song1Input: document.getElementById('song1Input'),
+  song2Input: document.getElementById('song2Input'),
+  compareBtn: document.getElementById('compareBtn'),
+  comparisonResult: document.getElementById('comparisonResult'),
+  comparisonCharts: document.getElementById('comparisonCharts'),
+  navToggle: document.getElementById('navToggle'),
+  navMenu: document.getElementById('navMenu'),
+  exploreBtn: document.getElementById('exploreBtn'),
+  analyticsBtn: document.getElementById('analyticsBtn')
 };
 
-/* ============================================================================
-   BOOTSTRAP
-   ============================================================================ */
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    initParticles();
-    bindListeners();
-    loadInitial();
+  initNavigation();
+  initSearch();
+  initSuggestions();
+  loadMoods();
+  loadAnalytics();
+  setupScrollAnimation();
+  setupButtonNavigation();
 });
 
-/* ============================================================================
-   LIGHTWEIGHT PARTICLE CANVAS (no three.js needed)
-   ============================================================================ */
-function initParticles() {
-    const canvas = document.getElementById('particles-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+// ============================================================================
+// NAVIGATION
+// ============================================================================
+function initNavigation() {
+  // Mobile menu toggle
+  elements.navToggle?.addEventListener('click', () => {
+    elements.navMenu?.classList.toggle('active');
+  });
 
-    let w, h, particles = [];
-    const COUNT = window.innerWidth < 768 ? 30 : 60;
-
-    function resize() {
-        w = canvas.width = window.innerWidth * window.devicePixelRatio;
-        h = canvas.height = window.innerHeight * window.devicePixelRatio;
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    for (let i = 0; i < COUNT; i++) {
-        particles.push({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            vx: (Math.random() - 0.5) * 0.3,
-            vy: (Math.random() - 0.5) * 0.3,
-            r: Math.random() * 1.6 + 0.4,
-            hue: Math.random() > 0.5 ? 190 : 270, // cyan-ish or purple
-        });
-    }
-
-    function tick() {
-        ctx.clearRect(0, 0, w, h);
-        particles.forEach(p => {
-            p.x += p.vx; p.y += p.vy;
-            if (p.x < 0) p.x = w; else if (p.x > w) p.x = 0;
-            if (p.y < 0) p.y = h; else if (p.y > h) p.y = 0;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r * window.devicePixelRatio, 0, Math.PI * 2);
-            ctx.fillStyle = `hsla(${p.hue}, 100%, 70%, 0.55)`;
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = `hsla(${p.hue}, 100%, 65%, 0.6)`;
-            ctx.fill();
-        });
-        requestAnimationFrame(tick);
-    }
-    tick();
-}
-
-/* ============================================================================
-   EVENT LISTENERS
-   ============================================================================ */
-function bindListeners() {
-    const form = document.getElementById('searchForm');
-    if (form) form.addEventListener('submit', e => { e.preventDefault(); handleSearch(); });
-
-    const searchBtn = document.getElementById('searchBtn');
-    if (searchBtn) searchBtn.addEventListener('click', e => { e.preventDefault(); handleSearch(); });
-
-    const input = document.getElementById('searchInput');
-    if (input) input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); handleSearch(); }
+  // Close mobile menu on link click
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      elements.navMenu?.classList.remove('active');
     });
+  });
 
-    document.querySelectorAll('.chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            const q = chip.dataset.query;
-            document.getElementById('searchInput').value = q;
-            handleSearch();
-        });
-    });
-
-    const battleBtn = document.getElementById('battleBtn');
-    if (battleBtn) battleBtn.addEventListener('click', handleBattle);
-
-    const clearMood = document.getElementById('clearMoodFilterBtn');
-    if (clearMood) clearMood.addEventListener('click', clearMoodFilter);
-}
-
-/* ============================================================================
-   INITIAL LOAD
-   ============================================================================ */
-async function loadInitial() {
-    await loadMoods();
-    await loadAnalytics();
-    populateBattleSelects();
-}
-
-/* ============================================================================
-   API
-   ============================================================================ */
-async function api(endpoint, method = 'GET', data = null) {
-    showLoading(true);
-    try {
-        const opts = { method, headers: { 'Content-Type': 'application/json' } };
-        if (data) opts.body = JSON.stringify(data);
-        const res = await fetch(endpoint, opts);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.json();
-    } catch (err) {
-        console.error('API error', endpoint, err);
-        return null;
-    } finally {
-        showLoading(false);
-    }
-}
-
-function showLoading(show) {
-    const el = document.getElementById('loadingIndicator');
-    if (el) el.classList.toggle('hidden', !show);
-}
-
-/* ============================================================================
-   TOAST (inline message)
-   ============================================================================ */
-let toastTimer;
-function toast(msg) {
-    const el = document.getElementById('toast');
-    const m = document.getElementById('toastMsg');
-    if (!el || !m) return;
-    m.textContent = msg;
-    el.classList.remove('hidden');
-    requestAnimationFrame(() => el.classList.add('show'));
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-        el.classList.remove('show');
-        setTimeout(() => el.classList.add('hidden'), 320);
-    }, 2600);
-}
-
-/* ============================================================================
-   SEARCH
-   ============================================================================ */
-async function handleSearch() {
-    const input = document.getElementById('searchInput');
-    const query = (input?.value || '').trim();
-    if (query.length < 2) { toast('Type at least 2 characters'); return; }
-
-    const result = await api('/api/search', 'POST', { query });
-    if (!result || !result.results) { toast('Search failed — please try again'); return; }
-
-    renderSearchResults(result.results);
-}
-
-function renderSearchResults(results) {
-    const list = document.getElementById('resultsList');
-    const section = document.getElementById('searchResults');
-    const count = document.getElementById('resultsCount');
-    if (!list || !section) return;
-
-    list.innerHTML = '';
-    count.textContent = `${results.length} track${results.length === 1 ? '' : 's'}`;
-
-    if (results.length === 0) {
-        list.innerHTML = `
-            <div class="empty-state" style="grid-column: 1/-1;">
-                <div class="empty-icon">🔍</div>
-                <p>No tracks matched that search. Try another title or artist.</p>
-            </div>`;
-        section.classList.remove('hidden');
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        return;
-    }
-
-    results.forEach((song, i) => list.appendChild(buildResultCard(song, i)));
-    section.classList.remove('hidden');
-    setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-}
-
-function buildResultCard(song, i = 0) {
-    const card = document.createElement('div');
-    card.className = 'result-card';
-    card.style.animationDelay = `${i * 50}ms`;
-
-    card.innerHTML = `
-        <h4>${escapeHtml(song.title)}</h4>
-        <p>${escapeHtml(song.artist)}</p>
-
-        <div class="metrics-row">
-            <div class="metric">
-                <div class="metric-label">Energy</div>
-                <div class="metric-value">${song.energy.toFixed(2)}</div>
-            </div>
-
-            <div class="metric">
-                <div class="metric-label">Dance</div>
-                <div class="metric-value">${song.danceability.toFixed(2)}</div>
-            </div>
-
-            <div class="metric">
-                <div class="metric-label">Tempo</div>
-                <div class="metric-value">${song.tempo}</div>
-            </div>
-
-            <div class="metric">
-                <div class="metric-label">Pop</div>
-                <div class="metric-value">${song.popularity}</div>
-            </div>
-        </div>
-
-        ${song.spotify_url ? `
-            <a href="${song.spotify_url}"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="spotify-btn"
-               onclick="event.stopPropagation();">
-               Listen on Spotify
-            </a>
-        ` : ''}
-    `;
-
-    card.addEventListener('click', () => selectSong(song));
-
-    return card;
-}
-
-/* ============================================================================
-   SELECT SONG → RECS + INSIGHTS
-   ============================================================================ */
-async function selectSong(song) {
-    state.selectedSong = song;
-    state.selectedMood = null;
-    document.querySelectorAll('.mood-card.active').forEach(el => el.classList.remove('active'));
-    document.getElementById('moodFilterResults')?.classList.add('hidden');
-
-    const card = document.getElementById('selectedSongCard');
-    if (card) {
-        card.innerHTML = `
-            <h3 class="song-title">${escapeHtml(song.title)}</h3>
-            <p class="song-artist">${escapeHtml(song.artist)}</p>
-            <div class="info-grid">
-                <div class="info-item"><div class="info-item-label">Energy</div><div class="info-item-value">${song.energy.toFixed(2)}</div></div>
-                <div class="info-item"><div class="info-item-label">Danceability</div><div class="info-item-value">${song.danceability.toFixed(2)}</div></div>
-                <div class="info-item"><div class="info-item-label">Tempo</div><div class="info-item-value">${song.tempo} <span style="font-size:0.7em;color:var(--text-muted)">BPM</span></div></div>
-                <div class="info-item"><div class="info-item-label">Popularity</div><div class="info-item-value">${song.popularity}</div></div>
-            </div>`;
-    }
-    document.getElementById('selectedSongSection')?.classList.remove('hidden');
-
-    await Promise.all([
-        getRecommendations(song.id),
-        getInsights(song.id),
-    ]);
-
-    setTimeout(() => {
-        document.getElementById('selectedSongSection')
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
-}
-
-async function getRecommendations(songId) {
-    const result = await api('/api/recommend', 'POST', { song_id: songId, count: 6 });
-    if (!result || !result.recommendations) return;
-    renderRecommendations(result.recommendations);
-}
-
-function renderRecommendations(recs) {
-    const grid = document.getElementById('recommendationsGrid');
-    const section = document.getElementById('recommendationsSection');
-    if (!grid || !section) return;
-    grid.innerHTML = '';
-
-    recs.forEach((rec, i) => {
-        const confidence = Math.round((rec.similarity_score || 0) * 100);
-        const reason = reasonFor(confidence);
-        const card = document.createElement('div');
-        card.className = 'rec-card';
-        card.style.animationDelay = `${i * 60}ms`;
-        card.innerHTML = `
-            <div class="rec-head">
-                <div>
-                    <div class="rec-title">${escapeHtml(rec.title)}</div>
-                    <div class="rec-artist">${escapeHtml(rec.artist)}</div>
-                </div>
-                <div class="rec-score">${confidence}%</div>
-            </div>
-            <div class="rec-reason">${reason}</div>
-            <div class="rec-features">
-                <div class="rec-feature"><div class="feature-label">Energy</div><div class="feature-value">${rec.energy.toFixed(2)}</div></div>
-                <div class="rec-feature"><div class="feature-label">Dance</div><div class="feature-value">${rec.danceability.toFixed(2)}</div></div>
-                <div class="rec-feature"><div class="feature-label">Tempo</div><div class="feature-value">${rec.tempo}</div></div>
-                <div class="rec-feature"><div class="feature-label">Pop</div><div class="feature-value">${rec.popularity}</div></div>
-            </div>
-            ${rec.mood ? `<span class="rec-mood">${escapeHtml(rec.mood)}</span>` : ''}`;
-        grid.appendChild(card);
-    });
-
-    section.classList.remove('hidden');
-}
-
-function reasonFor(c) {
-    if (c >= 95) return 'Near-perfect match — almost identical sonic signature.';
-    if (c >= 85) return 'Tight match on energy and danceability.';
-    if (c >= 75) return 'Strong overlap across multiple audio features.';
-    if (c >= 65) return 'Similar overall vibe and mood.';
-    return 'Recommended on broad audio similarity.';
-}
-
-async function getInsights(songId) {
-    const result = await api('/api/insights', 'POST', { song_id: songId });
-    if (!result || !result.insights) return;
-    const list = document.getElementById('insightsList');
-    const section = document.getElementById('insightsSection');
-    if (!list || !section) return;
-    list.innerHTML = '';
-    result.insights.forEach((text, i) => {
-        const item = document.createElement('div');
-        item.className = 'insight-item';
-        item.style.animationDelay = `${i * 80}ms`;
-        item.textContent = text;
-        list.appendChild(item);
-    });
-    section.classList.remove('hidden');
-}
-
-/* ============================================================================
-   MOODS
-   ============================================================================ */
-async function loadMoods() {
-    const result = await api('/api/moods', 'GET');
-    if (!result || !result.moods) return;
-
-    state.allMoods = result.moods;
-    state.songs = [];
-    Object.values(result.moods).forEach(arr => state.songs.push(...arr));
-
-    const grid = document.getElementById('moodGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-
-    Object.entries(result.moods).forEach(([mood, songs], i) => {
-        const card = document.createElement('button');
-        card.type = 'button';
-        card.className = 'mood-card';
-        card.style.animationDelay = `${i * 40}ms`;
-        card.innerHTML = `
-            <div class="mood-emoji">${MOOD_EMOJI[mood] || '🎵'}</div>
-            <div class="mood-name">${escapeHtml(mood)}</div>
-            <div class="mood-count">${songs.length} track${songs.length === 1 ? '' : 's'}</div>`;
-        card.addEventListener('click', () => filterByMood(mood, card));
-        grid.appendChild(card);
-    });
-}
-
-function filterByMood(mood, cardEl) {
-    document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
-    cardEl.classList.add('active');
-    state.selectedMood = mood;
-
-    const songs = state.allMoods[mood] || [];
-    const wrap = document.getElementById('moodFilterResults');
-    const title = document.getElementById('moodFilterTitle');
-    const meta = document.getElementById('moodFilterMeta');
-    const grid = document.getElementById('moodFilterGrid');
-    const empty = document.getElementById('moodEmptyState');
-    if (!wrap || !grid) return;
-
-    title.textContent = `${MOOD_EMOJI[mood] || '🎵'} ${mood}`;
-    meta.textContent = `${songs.length} track${songs.length === 1 ? '' : 's'} in this category`;
-    grid.innerHTML = '';
-
-    if (songs.length === 0) {
-        empty.classList.remove('hidden');
-        grid.classList.add('hidden');
+  // Sticky header effect
+  window.addEventListener('scroll', () => {
+    const header = document.getElementById('header');
+    if (window.scrollY > 50) {
+      header?.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.3)';
     } else {
-        empty.classList.add('hidden');
-        grid.classList.remove('hidden');
-        songs.forEach((s, i) => {
-            // mood payload may lack tempo/popularity — fall back to full songs list
-            const full = state.songs.find(x => x.id === s.id) || s;
-            grid.appendChild(buildResultCard({
-                id: full.id,
-                title: full.title,
-                artist: full.artist,
-                energy: full.energy ?? 0,
-                danceability: full.danceability ?? 0,
-                tempo: full.tempo ?? 0,
-                popularity: full.popularity ?? 0,
-            }, i));
-        });
+      header?.style.boxShadow = 'none';
     }
-
-    wrap.classList.remove('hidden');
-    setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  });
 }
 
-function clearMoodFilter() {
-    state.selectedMood = null;
-    document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
-    document.getElementById('moodFilterResults')?.classList.add('hidden');
-}
+// ============================================================================
+// SEARCH FUNCTIONALITY
+// ============================================================================
+function initSearch() {
+  elements.searchBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    performSearch();
+  });
 
-/* ============================================================================
-   ANALYTICS
-   ============================================================================ */
-async function loadAnalytics() {
-    const result = await api('/api/analytics', 'GET');
-    if (!result || !result.summary) return;
-    state.analytics = result;
-
-    const s = result.summary;
-    animateNumber('totalSongs', s.total_songs, 0);
-    animateNumber('avgEnergy', s.avg_energy, 2);
-    animateNumber('avgDance', s.avg_danceability, 2);
-    animateNumber('avgTempo', s.avg_tempo, 0);
-    animateNumber('avgPopularity', s.avg_popularity, 0);
-
-    // mini bars
-    fillBar(document.querySelector('#avgEnergy + .bar-mini .bar-mini-fill'), s.avg_energy * 100);
-    fillBar(document.querySelector('#avgDance + .bar-mini .bar-mini-fill'), s.avg_danceability * 100);
-    fillBar(document.querySelector('#avgPopularity + .bar-mini .bar-mini-fill'), s.avg_popularity);
-
-    // dominant tempo
-    const td = result.distributions?.tempo || {};
-    const tempoLabels = { slow: 'Slow', moderate: 'Moderate', fast: 'Fast' };
-    const domTempo = Object.entries(td).sort((a, b) => b[1] - a[1])[0];
-    if (domTempo) setText('dominantTempo', tempoLabels[domTempo[0]] || domTempo[0]);
-
-    // top mood (computed from state.allMoods if available)
-    const topMood = Object.entries(state.allMoods).sort((a, b) => b[1].length - a[1].length)[0];
-    if (topMood) setText('commonMood', topMood[0]);
-
-    // avg match — approximate (we don't have per-pair data); show a sensible derived value
-    setText('avgMatch', Math.round(s.avg_energy * 50 + s.avg_danceability * 50) + '%');
-
-    // charts
-    renderBarChart('tempoChart', td, { slow: 'Slow (<90)', moderate: 'Moderate', fast: 'Fast (≥130)' });
-    renderBarChart('energyChart', result.distributions?.energy || {}, { low: 'Low (<.4)', medium: 'Medium', high: 'High (≥.7)' });
-}
-
-function animateNumber(id, target, decimals) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const start = 0;
-    const duration = 900;
-    const t0 = performance.now();
-    function step(now) {
-        const p = Math.min(1, (now - t0) / duration);
-        const eased = 1 - Math.pow(1 - p, 3);
-        const v = start + (target - start) * eased;
-        el.textContent = decimals === 0 ? Math.round(v).toLocaleString() : v.toFixed(decimals);
-        if (p < 1) requestAnimationFrame(step);
+  elements.searchInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      performSearch();
     }
-    requestAnimationFrame(step);
+  });
 }
 
-function fillBar(el, pct) {
-    if (!el) return;
-    requestAnimationFrame(() => { el.style.width = Math.max(0, Math.min(100, pct)) + '%'; });
+function performSearch() {
+  const query = elements.searchInput?.value.trim();
+  if (!query) return;
+
+  fetch('/api/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query })
+  })
+    .then(res => res.json())
+    .then(data => {
+      displaySearchResults(data.results || []);
+      showSection('resultsSection');
+      elements.searchInput.value = '';
+    })
+    .catch(err => console.error('Search error:', err));
 }
 
-function renderBarChart(id, data, labels) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = '';
-    const total = Object.values(data).reduce((a, b) => a + b, 0) || 1;
-    Object.entries(data).forEach(([key, value], i) => {
-        const pct = (value / total) * 100;
-        const row = document.createElement('div');
-        row.className = 'bar-row';
-        row.innerHTML = `
-            <div class="bar-row-label">${labels[key] || key}</div>
-            <div class="bar-track"><div class="bar-fill" data-fill="${pct}"></div></div>
-            <div class="bar-row-value">${value}</div>`;
-        el.appendChild(row);
-        setTimeout(() => {
-            row.querySelector('.bar-fill').style.width = pct + '%';
-        }, 100 + i * 80);
+function displaySearchResults(results) {
+  if (results.length === 0) {
+    elements.resultsList.innerHTML = '<p class="empty-state">No results found. Try another search.</p>';
+    elements.resultsCount.textContent = '0 songs';
+    return;
+  }
+
+  elements.resultsList.innerHTML = results.map((song, idx) => `
+    <div class="song-card" data-song-id="${song.id}">
+      <span class="song-rank">#${idx + 1}</span>
+      <div class="song-title">${escapeHtml(song.title)}</div>
+      <div class="song-artist">${escapeHtml(song.artist)}</div>
+      <div class="song-features">
+        ${createFeatureRow('Energy', song.energy)}
+        ${createFeatureRow('Danceability', song.danceability)}
+        ${createFeatureRow('Valence', song.valence)}
+        ${createFeatureRow('Tempo', song.tempo, 'bpm')}
+      </div>
+    </div>
+  `).join('');
+
+  elements.resultsCount.textContent = `${results.length} song${results.length !== 1 ? 's' : ''}`;
+
+  // Add click handlers
+  document.querySelectorAll('.song-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const songId = card.getAttribute('data-song-id');
+      const song = results.find(s => s.id == songId);
+      selectSong(song);
     });
+  });
 }
 
-/* ============================================================================
-   BATTLE
-   ============================================================================ */
-function populateBattleSelects() {
-    const a = document.getElementById('song1');
-    const b = document.getElementById('song2');
-    if (!a || !b) return;
-    // deduplicate by id
-    const seen = new Set();
-    const uniq = state.songs.filter(s => seen.has(s.id) ? false : seen.add(s.id));
-    uniq.sort((x, y) => x.title.localeCompare(y.title));
-
-    const opts = uniq.map(s => `<option value="${s.id}">${escapeHtml(s.title)} — ${escapeHtml(s.artist)}</option>`).join('');
-    a.innerHTML = `<option value="">Select song…</option>${opts}`;
-    b.innerHTML = `<option value="">Select song…</option>${opts}`;
+function createFeatureRow(label, value, unit = '') {
+  const displayValue = typeof value === 'number' ? (value > 10 ? Math.round(value) : value.toFixed(2)) : value;
+  const normalized = typeof value === 'number' && value <= 1 ? value : value / 100;
+  const percentage = (normalized * 100).toFixed(0);
+  
+  return `
+    <div class="feature-row">
+      <span class="feature-label">${label}</span>
+      <span class="feature-value">${displayValue}${unit}</span>
+    </div>
+  `;
 }
 
-async function handleBattle() {
-    const id1 = parseInt(document.getElementById('song1').value, 10);
-    const id2 = parseInt(document.getElementById('song2').value, 10);
-    if (!id1 || !id2) { toast('Pick two tracks to battle'); return; }
-    if (id1 === id2) { toast('Pick two different tracks'); return; }
-
-    const result = await api('/api/battle', 'POST', { song1_id: id1, song2_id: id2 });
-    if (!result) { toast('Battle failed — try again'); return; }
-    renderBattle(result);
+// ============================================================================
+// SONG SELECTION & DETAILS
+// ============================================================================
+function selectSong(song) {
+  state.currentSong = song;
+  displaySongDetails(song);
+  loadRecommendations(song.id);
+  showSection('selectedSection');
+  smoothScroll('selectedSection');
 }
 
-function renderBattle(r) {
-    const wrap = document.getElementById('battleResults');
-    if (!wrap) return;
-    const s1 = r.song1 || {};
-    const s2 = r.song2 || {};
-    const winner = r.winner || {};
-    const winnerIs1 = winner.id === s1.id;
+function displaySongDetails(song) {
+  const audioMetrics = [
+    { name: 'Energy', value: song.energy, unit: '%' },
+    { name: 'Danceability', value: song.danceability, unit: '%' },
+    { name: 'Valence', value: song.valence, unit: '%' },
+    { name: 'Acousticness', value: song.acousticness, unit: '%' },
+    { name: 'Instrumentalness', value: song.instrumentalness, unit: '%' },
+    { name: 'Tempo', value: song.tempo, unit: 'BPM' }
+  ];
 
-    wrap.innerHTML = `
-        <div class="battle-winner">
-            <div class="battle-winner-label">Winner</div>
-            <div class="battle-winner-name">${escapeHtml(winner.title || '—')} ${winner.artist ? '· ' + escapeHtml(winner.artist) : ''}</div>
+  elements.selectedSongCard.innerHTML = `
+    <div class="song-header">
+      <div class="song-name">${escapeHtml(song.title)}</div>
+      <div class="song-meta">
+        <span>Artist: ${escapeHtml(song.artist)}</span>
+        <span>Popularity: ${song.popularity}/100</span>
+      </div>
+    </div>
+
+    <div class="audio-profile">
+      ${audioMetrics.map(metric => `
+        <div class="audio-metric">
+          <div class="metric-name">${metric.name}</div>
+          <div class="metric-value">${metric.value}${metric.unit}</div>
+          <div class="metric-bar">
+            <div class="metric-fill" style="width: ${metric.value}%"></div>
+          </div>
         </div>
-        <div class="battle-comparison">
-            ${battleSide(s1, winnerIs1)}
-            ${battleSide(s2, !winnerIs1)}
-        </div>`;
-    wrap.classList.remove('hidden');
-    setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      `).join('')}
+    </div>
+  `;
 }
 
-function battleSide(s, isWinner) {
-    return `
-        <div class="battle-side ${isWinner ? 'winner' : ''}">
-            <div class="battle-side-title">${escapeHtml(s.title || '—')}<br><span style="color:var(--text-muted);font-weight:400;font-size:0.85rem;">${escapeHtml(s.artist || '')}</span></div>
-            <div class="battle-side-features">
-                <div class="battle-feature-row"><span>Energy</span><span>${(s.energy ?? 0).toFixed(2)}</span></div>
-                <div class="battle-feature-row"><span>Dance</span><span>${(s.danceability ?? 0).toFixed(2)}</span></div>
-                <div class="battle-feature-row"><span>Tempo</span><span>${s.tempo ?? 0} BPM</span></div>
-                <div class="battle-feature-row"><span>Popularity</span><span>${s.popularity ?? 0}</span></div>
+// ============================================================================
+// RECOMMENDATIONS
+// ============================================================================
+function loadRecommendations(songId) {
+  fetch('/api/recommend', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ song_id: songId, count: 6 })
+  })
+    .then(res => res.json())
+    .then(data => {
+      state.recommendations = data.recommendations || [];
+      displayRecommendations(state.recommendations);
+      showSection('recommendations');
+    })
+    .catch(err => console.error('Recommendation error:', err));
+}
+
+function displayRecommendations(recommendations) {
+  if (recommendations.length === 0) {
+    elements.recommendationsList.innerHTML = '<p class="empty-state">No recommendations found.</p>';
+    return;
+  }
+
+  elements.recommendationsList.innerHTML = recommendations.map((rec, idx) => `
+    <div class="recommendation-card">
+      <span class="recommendation-rank">Match #${idx + 1}</span>
+      <div class="recommendation-title">${escapeHtml(rec.title)}</div>
+      <div class="recommendation-artist">${escapeHtml(rec.artist)}</div>
+      <div class="match-score">
+        <span class="match-label">Similarity</span>
+        <span class="match-value">${Math.round(rec.similarity * 100)}%</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================================
+// MOODS
+// ============================================================================
+function loadMoods() {
+  fetch('/api/moods')
+    .then(res => res.json())
+    .then(data => {
+      state.moods = data.moods || {};
+      displayMoods(state.moods);
+    })
+    .catch(err => console.error('Moods error:', err));
+}
+
+function displayMoods(moods) {
+  elements.moodsList.innerHTML = Object.entries(moods).map(([mood, songs]) => `
+    <div class="mood-card" data-mood="${mood}">
+      <div class="mood-name">${mood}</div>
+      <div class="mood-count">${songs.length} tracks</div>
+    </div>
+  `).join('');
+
+  // Add click handlers
+  document.querySelectorAll('.mood-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const mood = card.getAttribute('data-mood');
+      const songs = state.moods[mood];
+      displayMoodSongs(mood, songs);
+    });
+  });
+}
+
+function displayMoodSongs(mood, songs) {
+  const moodDisplay = `
+    <div class="mood-section">
+      <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">${mood.toUpperCase()}</h3>
+      <div class="results-grid">
+        ${songs.map((song, idx) => `
+          <div class="song-card" data-song-id="${song.id}">
+            <span class="song-rank">#${idx + 1} in ${mood}</span>
+            <div class="song-title">${escapeHtml(song.title)}</div>
+            <div class="song-artist">${escapeHtml(song.artist)}</div>
+            <div class="song-features">
+              ${createFeatureRow('Energy', song.energy)}
+              ${createFeatureRow('Danceability', song.danceability)}
             </div>
-        </div>`;
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  // Replace moods section with songs
+  const moodsSection = document.getElementById('moods');
+  const temp = document.createElement('div');
+  temp.innerHTML = moodDisplay;
+  moodsSection.replaceChild(temp.firstElementChild, elements.moodsList);
+
+  // Re-add click handlers
+  document.querySelectorAll('.song-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const songId = card.getAttribute('data-song-id');
+      const song = songs.find(s => s.id == songId);
+      if (song) selectSong(song);
+    });
+  });
 }
 
-/* ============================================================================
-   UTIL
-   ============================================================================ */
-function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
-
-function escapeHtml(str) {
-    return String(str ?? '').replace(/[&<>"']/g, ch => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-    }[ch]));
+// ============================================================================
+// SONG COMPARISON
+// ============================================================================
+function initSongComparison() {
+  elements.compareBtn?.addEventListener('click', performComparison);
+  
+  [elements.song1Input, elements.song2Input].forEach(input => {
+    input?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') performComparison();
+    });
+  });
 }
+
+function performComparison() {
+  const song1Query = elements.song1Input?.value.trim();
+  const song2Query = elements.song2Input?.value.trim();
+
+  if (!song1Query || !song2Query) {
+    alert('Please enter both song titles');
+    return;
+  }
+
+  // Search for both songs
+  Promise.all([
+    fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: song1Query })
+    }).then(res => res.json()),
+    fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: song2Query })
+    }).then(res => res.json())
+  ])
+    .then(([results1, results2]) => {
+      const song1 = results1.results?.[0];
+      const song2 = results2.results?.[0];
+
+      if (!song1 || !song2) {
+        alert('One or both songs not found');
+        return;
+      }
+
+      displayComparison(song1, song2);
+    })
+    .catch(err => console.error('Comparison error:', err));
+}
+
+function displayComparison(song1, song2) {
+  const metrics = ['energy', 'danceability', 'valence', 'tempo', 'acousticness', 'instrumentalness'];
+  
+  elements.song1Name.textContent = escapeHtml(song1.title);
+  elements.song1Artist.textContent = escapeHtml(song1.artist);
+  elements.song2Name.textContent = escapeHtml(song2.title);
+  elements.song2Artist.textContent = escapeHtml(song2.artist);
+
+  elements.comparisonCharts.innerHTML = metrics.map(metric => {
+    const value1 = song1[metric] || 0;
+    const value2 = song2[metric] || 0;
+    const maxValue = metric === 'tempo' ? 200 : 100;
+    const percent1 = (value1 / maxValue) * 100;
+    const percent2 = (value2 / maxValue) * 100;
+    const label = metric.charAt(0).toUpperCase() + metric.slice(1);
+
+    return `
+      <div class="comparison-row">
+        <div class="comparison-label">${label}</div>
+        <div class="comparison-bar-container">
+          <div class="comparison-bar song1">
+            <div class="comparison-fill" style="width: ${percent1}%"></div>
+          </div>
+          <span class="comparison-value">${value1}${metric === 'tempo' ? '' : '%'}</span>
+        </div>
+        <div class="comparison-bar-container">
+          <div class="comparison-bar song2">
+            <div class="comparison-fill" style="width: ${percent2}%"></div>
+          </div>
+          <span class="comparison-value">${value2}${metric === 'tempo' ? '' : '%'}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  elements.comparisonResult.classList.remove('hidden');
+  showSection('compare');
+  smoothScroll('compare');
+}
+
+// ============================================================================
+// ANALYTICS
+// ============================================================================
+function loadAnalytics() {
+  fetch('/api/analytics')
+    .then(res => res.json())
+    .then(data => {
+      state.analytics = data;
+      displayAnalytics(data);
+    })
+    .catch(err => console.error('Analytics error:', err));
+}
+
+function displayAnalytics(data) {
+  const summary = data.summary || {};
+  const distributions = data.distributions || {};
+  const extremes = data.extremes || {};
+
+  // Stats
+  document.getElementById('statTotalSongs').textContent = summary.total_songs || '—';
+  document.getElementById('statAvgEnergy').textContent = (summary.avg_energy || 0).toFixed(2);
+  document.getElementById('statAvgDance').textContent = (summary.avg_danceability || 0).toFixed(2);
+  document.getElementById('statAvgTempo').textContent = Math.round(summary.avg_tempo || 0);
+
+  // Distributions
+  const totalSongs = summary.total_songs || 1;
+  
+  const energy = distributions.energy || {};
+  setDistributionBar('energyLow', energy.low || 0, totalSongs);
+  setDistributionBar('energyMed', energy.medium || 0, totalSongs);
+  setDistributionBar('energyHigh', energy.high || 0, totalSongs);
+  document.getElementById('energyLowCount').textContent = energy.low || 0;
+  document.getElementById('energyMedCount').textContent = energy.medium || 0;
+  document.getElementById('energyHighCount').textContent = energy.high || 0;
+
+  const tempo = distributions.tempo || {};
+  setDistributionBar('tempoSlow', tempo.slow || 0, totalSongs);
+  setDistributionBar('tempoMod', tempo.moderate || 0, totalSongs);
+  setDistributionBar('tempoFast', tempo.fast || 0, totalSongs);
+  document.getElementById('tempoSlowCount').textContent = tempo.slow || 0;
+  document.getElementById('tempoModCount').textContent = tempo.moderate || 0;
+  document.getElementById('tempoFastCount').textContent = tempo.fast || 0;
+
+  // Extremes
+  document.getElementById('extremeDanceable').textContent = extremes.most_danceable 
+    ? `${escapeHtml(extremes.most_danceable.title)} • ${escapeHtml(extremes.most_danceable.artist)}`
+    : '—';
+  document.getElementById('extremeEnergy').textContent = extremes.highest_energy
+    ? `${escapeHtml(extremes.highest_energy.title)} • ${escapeHtml(extremes.highest_energy.artist)}`
+    : '—';
+  document.getElementById('extremeFastest').textContent = extremes.fastest
+    ? `${escapeHtml(extremes.fastest.title)} • ${escapeHtml(extremes.fastest.artist)}`
+    : '—';
+}
+
+function setDistributionBar(elementId, count, total) {
+  const bar = document.getElementById(elementId);
+  const percentage = (count / total) * 100;
+  if (bar) {
+    bar.style.width = percentage + '%';
+  }
+}
+
+// ============================================================================
+// SUGGESTIONS
+// ============================================================================
+function initSuggestions() {
+  elements.suggestions.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const query = btn.getAttribute('data-query');
+      elements.searchInput.value = query;
+      performSearch();
+    });
+  });
+}
+
+// ============================================================================
+// BUTTON NAVIGATION
+// ============================================================================
+function setupButtonNavigation() {
+  elements.exploreBtn?.addEventListener('click', () => {
+    smoothScroll('resultsSection');
+  });
+
+  elements.analyticsBtn?.addEventListener('click', () => {
+    smoothScroll('analytics');
+  });
+}
+
+// ============================================================================
+// UI UTILITIES
+// ============================================================================
+function showSection(sectionId) {
+  // Hide all sections except hero and moods
+  document.querySelectorAll('.results-section, .discovery-section, .recommendations-section, .compare-section, .analytics-section').forEach(section => {
+    if (section.id !== sectionId) {
+      section.classList.add('hidden');
+    }
+  });
+
+  // Show target section
+  const targetSection = document.getElementById(sectionId);
+  if (targetSection) {
+    targetSection.classList.remove('hidden');
+  }
+}
+
+function smoothScroll(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ============================================================================
+// SCROLL ANIMATIONS
+// ============================================================================
+function setupScrollAnimation() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, {
+    threshold: 0.1
+  });
+
+  // Observe cards for fade-in
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.song-card, .recommendation-card, .mood-card, .stat-card').forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'all 0.5s ease-out';
+      observer.observe(card);
+    });
+  });
+}
+
+// Initialize comparison handlers
+initSongComparison();

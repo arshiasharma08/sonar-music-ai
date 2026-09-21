@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_upgrade_addon.css') }}">
 </head>
 <body>
 
@@ -28,17 +29,25 @@
     <!-- TOP NAV -->
     <header class="nav">
         <div class="container nav-inner">
-            <a href="#" class="brand">
+            <a href="#" class="brand" data-nav="home">
                 <span class="brand-mark">
                     <span class="brand-dot"></span>
                 </span>
                 <span class="brand-text">Sonar<span class="brand-text-dim">.ai</span></span>
             </a>
             <nav class="nav-links">
-                <a href="#search">Search</a>
-                <a href="#moods">Moods</a>
-                <a href="#dashboard">Analytics</a>
-                <a href="#battle">Battle</a>
+                <a href="#search" class="nav-link" data-nav="search">
+                    <span>Search</span>
+                </a>
+                <a href="#moods" class="nav-link" data-nav="moods">
+                    <span>Moods</span>
+                </a>
+                <a href="#dashboard" class="nav-link" data-nav="dashboard">
+                    <span>Analytics</span>
+                </a>
+                <a href="#battle" class="nav-link" data-nav="battle">
+                    <span>Battle</span>
+                </a>
             </nav>
             <div class="nav-pill">
                 <span class="pulse-dot"></span>
@@ -49,7 +58,7 @@
 
     <main>
 
-        <!-- HERO -->
+        <!-- HERO / SEARCH SECTION -->
         <section class="hero" id="search">
             <div class="container">
                 <div class="hero-tag">
@@ -63,7 +72,7 @@
                 </h1>
 
                 <p class="hero-sub">
-                    Search across 250 curated tracks. Get recommendations powered by weighted
+                    Search across 250+ curated tracks. Get recommendations powered by weighted
                     audio-feature similarity. Classify mood, compare songs, and explore the
                     sonic shape of your library.
                 </p>
@@ -100,249 +109,156 @@
                         <div class="orb-core"></div>
                         <div class="orb-ring orb-ring-1"></div>
                         <div class="orb-ring orb-ring-2"></div>
-                        <div class="orb-ring orb-ring-3"></div>
-                    </div>
-                    <div class="waveform">
-                        <span></span><span></span><span></span><span></span><span></span>
-                        <span></span><span></span><span></span><span></span><span></span>
-                        <span></span><span></span><span></span><span></span><span></span>
-                        <span></span><span></span><span></span><span></span><span></span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- SEARCH RESULTS -->
-        <section id="searchResults" class="section hidden">
+        <!-- SEARCH RESULTS SECTION -->
+        <section id="results" class="results hidden">
             <div class="container">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">01 · Results</span>
-                        <h2 class="section-title">Search results</h2>
-                    </div>
-                    <span id="resultsCount" class="count-pill">0 tracks</span>
-                </div>
+                <h2 class="results-title">Search Results</h2>
                 <div id="resultsList" class="results-grid"></div>
             </div>
         </section>
 
-        <!-- SELECTED SONG -->
-        <section id="selectedSongSection" class="section hidden">
+        <!-- SELECTED SONG DETAIL SECTION -->
+        <section id="song-detail" class="song-detail hidden">
             <div class="container">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">02 · Now analyzing</span>
-                        <h2 class="section-title">Selected track</h2>
-                    </div>
-                </div>
-                <div id="selectedSongCard" class="selected-card"></div>
+                <div id="selectedSongDetail" class="song-detail-content"></div>
             </div>
         </section>
 
-        <!-- MOODS -->
-        <section id="moods" class="section">
+        <!-- RECOMMENDATIONS SECTION -->
+        <section id="recommendationsSection" class="recommendations-section hidden">
             <div class="container">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">Mood engine</span>
-                        <h2 class="section-title">Filter by vibe</h2>
-                        <p class="section-sub">Tap a mood to surface every track matching that sonic signature.</p>
-                    </div>
-                </div>
-
-                <div id="moodGrid" class="mood-grid"></div>
-
-                <!-- Filtered results -->
-                <div id="moodFilterResults" class="mood-results hidden">
-                    <div class="mood-results-head">
-                        <div>
-                            <h3 id="moodFilterTitle" class="mood-results-title"></h3>
-                            <p id="moodFilterMeta" class="mood-results-meta"></p>
-                        </div>
-                        <button id="clearMoodFilterBtn" class="btn btn-ghost">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                            Clear filter
-                        </button>
-                    </div>
-                    <div id="moodFilterGrid" class="results-grid"></div>
-                    <div id="moodEmptyState" class="empty-state hidden">
-                        <div class="empty-icon">🎧</div>
-                        <p>No tracks in this mood yet — try another vibe.</p>
-                    </div>
-                </div>
+                <h3 class="section-title">Similar Tracks</h3>
+                <div id="recommendationsList" class="recommendations-grid"></div>
             </div>
         </section>
 
-        <!-- RECOMMENDATIONS -->
-        <section id="recommendationsSection" class="section hidden">
+        <!-- INSIGHTS SECTION -->
+        <section id="insightsSection" class="insights-section hidden">
             <div class="container">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">03 · Recommendations</span>
-                        <h2 class="section-title">Sonically similar</h2>
-                        <p id="recSubtitle" class="section-sub">Ranked by weighted audio-feature similarity.</p>
-                    </div>
-                </div>
-                <div id="recommendationsGrid" class="rec-grid"></div>
-            </div>
-        </section>
-
-        <!-- INSIGHTS -->
-        <section id="insightsSection" class="section hidden">
-            <div class="container">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">04 · Insights</span>
-                        <h2 class="section-title">Track intelligence</h2>
-                    </div>
-                </div>
+                <h3 class="section-title">Insights</h3>
                 <div id="insightsList" class="insights-list"></div>
             </div>
         </section>
 
-        <!-- ANALYTICS DASHBOARD -->
-        <section id="dashboard" class="section">
+        <!-- MOODS SECTION -->
+        <section class="moods-section" id="moods">
             <div class="container">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">Library analytics</span>
-                        <h2 class="section-title">Library at a glance</h2>
-                        <p class="section-sub">Aggregate statistics computed live across the catalog.</p>
+                <div class="section-header">
+                    <h2>Mood Classification</h2>
+                    <p class="section-subtext">Explore songs organized by vibe and energy</p>
+                </div>
+                <div id="moodGrid" class="mood-grid"></div>
+                
+                <!-- MOOD FILTER RESULTS -->
+                <div id="moodFilterResults" class="mood-filter-results hidden">
+                    <div class="mood-results-header">
+                        <h3 id="moodResultsTitle"></h3>
+                        <button id="clearMoodFilterBtn" class="btn btn-secondary btn-small">
+                            ✕ Clear
+                        </button>
                     </div>
+                    <div id="moodFilterGrid" class="mood-filter-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ANALYTICS DASHBOARD SECTION -->
+        <section class="dashboard-section" id="dashboard">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Analytics Dashboard</h2>
+                    <p class="section-subtext">Collection insights and audio feature distributions</p>
                 </div>
 
-                <div class="stat-grid">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
                     <div class="stat-card">
+                        <div class="stat-value" id="totalSongs">250</div>
                         <div class="stat-label">Total tracks</div>
-                        <div id="totalSongs" class="stat-value" data-target="0">0</div>
-                        <div class="stat-spark"><span></span><span></span><span></span><span></span><span></span></div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-value" id="avgEnergy">0.00</div>
                         <div class="stat-label">Avg energy</div>
-                        <div id="avgEnergy" class="stat-value" data-target="0">0.00</div>
-                        <div class="bar-mini"><div class="bar-mini-fill" data-fill="0"></div></div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-value" id="avgDanceability">0.00</div>
                         <div class="stat-label">Avg danceability</div>
-                        <div id="avgDance" class="stat-value" data-target="0">0.00</div>
-                        <div class="bar-mini"><div class="bar-mini-fill" data-fill="0"></div></div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-value" id="avgTempo">0</div>
                         <div class="stat-label">Avg tempo</div>
-                        <div id="avgTempo" class="stat-value" data-target="0">0</div>
-                        <div class="stat-unit">BPM</div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-value" id="avgPopularity">0</div>
                         <div class="stat-label">Avg popularity</div>
-                        <div id="avgPopularity" class="stat-value" data-target="0">0</div>
-                        <div class="bar-mini"><div class="bar-mini-fill" data-fill="0"></div></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Top mood</div>
-                        <div id="commonMood" class="stat-value stat-value-sm">—</div>
-                        <div class="stat-unit">most frequent</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Avg match</div>
-                        <div id="avgMatch" class="stat-value">0%</div>
-                        <div class="stat-unit">similarity</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Dominant tempo</div>
-                        <div id="dominantTempo" class="stat-value stat-value-sm">—</div>
-                        <div class="stat-unit">range</div>
+                        <div class="stat-value" id="commonMood">—</div>
+                        <div class="stat-label">Most common mood</div>
                     </div>
                 </div>
 
-                <div class="charts-grid">
+                <!-- Distribution Charts -->
+                <div class="charts-row">
                     <div class="chart-card">
-                        <h4 class="chart-title">Tempo distribution</h4>
-                        <div id="tempoChart" class="bar-chart"></div>
+                        <h4>Tempo Distribution</h4>
+                        <div id="tempoChart" class="chart"></div>
                     </div>
                     <div class="chart-card">
-                        <h4 class="chart-title">Energy distribution</h4>
-                        <div id="energyChart" class="bar-chart"></div>
+                        <h4>Energy Distribution</h4>
+                        <div id="energyChart" class="chart"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- BATTLE -->
-        <section id="battle" class="section">
+        <!-- BATTLE SECTION -->
+        <section class="battle-section" id="battle">
             <div class="container">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">Song battle</span>
-                        <h2 class="section-title">Head-to-head</h2>
-                        <p class="section-sub">Compare any two tracks across audio features and pick a winner.</p>
-                    </div>
+                <div class="section-header">
+                    <h2>Song Battle</h2>
+                    <p class="section-subtext">Head-to-head track comparison</p>
                 </div>
 
-                <div class="battle-shell">
-                    <div class="battle-input-group">
-                        <label for="song1">Track A</label>
+                <div class="battle-inputs">
+                    <div class="battle-group">
+                        <label for="song1">Song 1</label>
                         <select id="song1" class="select-input">
-                            <option value="">Select song…</option>
+                            <option value="">Select a song…</option>
                         </select>
                     </div>
-                    <div class="battle-vs">VS</div>
-                    <div class="battle-input-group">
-                        <label for="song2">Track B</label>
+                    <div class="vs">vs</div>
+                    <div class="battle-group">
+                        <label for="song2">Song 2</label>
                         <select id="song2" class="select-input">
-                            <option value="">Select song…</option>
+                            <option value="">Select a song…</option>
                         </select>
                     </div>
-                    <button id="battleBtn" class="btn btn-primary btn-block">
-                        <span>Run battle</span>
-                    </button>
                 </div>
-
+                
+                <button id="battleBtn" class="btn btn-primary">Compare</button>
+                
                 <div id="battleResults" class="battle-results hidden"></div>
             </div>
         </section>
 
-        <!-- ABOUT -->
-        <section class="section about">
-            <div class="container">
-                <div class="about-grid">
-                    <div>
-                        <span class="eyebrow">Under the hood</span>
-                        <h2 class="section-title">How the engine works</h2>
-                    </div>
-                    <div class="about-body">
-                        <p>
-                            Every track is reduced to a feature vector — <strong>energy</strong>,
-                            <strong>danceability</strong>, <strong>tempo</strong>, and
-                            <strong>popularity</strong> — normalized to a comparable scale.
-                        </p>
-                        <p>
-                            Recommendations use <strong>weighted Euclidean distance</strong>:
-                            energy (30%) + danceability (30%) + tempo (20%) + popularity (20%).
-                            Closer in feature space = higher match confidence.
-                        </p>
-                        <p>
-                            Mood classification applies threshold logic across energy and
-                            danceability to sort tracks into ten distinct sonic categories.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
     </main>
 
+    <!-- Footer -->
     <footer class="footer">
-        <div class="container footer-inner">
-            <span class="brand-text">Sonar<span class="brand-text-dim">.ai</span></span>
-            <span class="footer-meta">© 2025 · Audio intelligence platform · Built on Flask</span>
+        <div class="container">
+            <p>Sonar v2.0 · AI Music Intelligence Platform</p>
         </div>
     </footer>
 
-    <!-- INLINE TOAST -->
-    <div id="toast" class="toast hidden"><span id="toastMsg"></span></div>
-
-    <!-- LOADING -->
-    <div id="loadingIndicator" class="loader hidden">
-        <div class="loader-orb"></div>
+    <!-- LOADING INDICATOR -->
+    <div id="loadingIndicator" class="loading-indicator hidden">
+        <div class="spinner"></div>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>

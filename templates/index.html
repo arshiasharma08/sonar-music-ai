@@ -1,266 +1,359 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AI-powered music intelligence — analyze, recommend, and battle songs across audio features.">
-    <title>Sonar · AI Music Intelligence</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arshia Sharma | Data Science @ Purdue</title>
+  <meta name="description" content="Portfolio of Arshia Sharma, a Data Science student at Purdue University building projects across data science, machine learning, data engineering, and software development.">
 
-    <!-- Premium fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <meta property="og:title" content="Arshia Sharma | Data Science @ Purdue">
+  <meta property="og:description" content="Portfolio of Arshia Sharma, a Data Science student at Purdue University building projects across data science, machine learning, data engineering, and software development.">
+  <meta property="og:type" content="website">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style_upgrade_addon.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%230D0F12%22/><text x=%2250%22 y=%2266%22 font-family=%22monospace%22 font-size=%2244%22 font-weight=%22700%22 fill=%22%23BFA875%22 text-anchor=%22middle%22>AS</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- AMBIENT BACKGROUND LAYERS -->
-    <div class="ambient">
-        <div class="grid-bg"></div>
-        <div class="aurora aurora-1"></div>
-        <div class="aurora aurora-2"></div>
-        <div class="aurora aurora-3"></div>
-        <div class="noise"></div>
-        <canvas id="particles-canvas"></canvas>
-    </div>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- TOP NAV -->
-    <header class="nav">
-        <div class="container nav-inner">
-            <a href="#" class="brand" data-nav="home">
-                <span class="brand-mark">
-                    <span class="brand-dot"></span>
-                </span>
-                <span class="brand-text">Sonar<span class="brand-text-dim">.ai</span></span>
-            </a>
-            <nav class="nav-links">
-                <a href="#search" class="nav-link" data-nav="search">
-                    <span>Search</span>
-                </a>
-                <a href="#moods" class="nav-link" data-nav="moods">
-                    <span>Moods</span>
-                </a>
-                <a href="#dashboard" class="nav-link" data-nav="dashboard">
-                    <span>Analytics</span>
-                </a>
-                <a href="#battle" class="nav-link" data-nav="battle">
-                    <span>Battle</span>
-                </a>
-            </nav>
-            <div class="nav-pill">
-                <span class="pulse-dot"></span>
-                <span>Engine online</span>
-            </div>
+  <!-- ===== NAV ===== -->
+  <header class="nav-wrap">
+    <nav class="nav" aria-label="Primary">
+      <a href="#top" class="nav-brand">arshia</a>
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navMenu">
+        <li><a href="#about" data-nav>about</a></li>
+        <li><a href="#experience" data-nav>experience</a></li>
+        <li><a href="#projects" data-nav>projects</a></li>
+        <li><a href="#skills" data-nav>skills</a></li>
+        <li><a href="#coursework" data-nav>coursework</a></li>
+        <li><a href="#contact" data-nav>contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="top">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <p class="kicker">Purdue &middot; Data Science</p>
+          <h1 class="hero-title">Arshia Sharma</h1>
+          <p class="hero-role">Data Science <span class="at">@</span> Purdue University</p>
+          <p class="hero-body">
+            I build with data and code, with interests in machine learning,
+            data engineering, and software development.
+          </p>
+          <div class="hero-cta">
+            <a href="#projects" class="btn btn-primary">View Projects</a>
+            <a href="Arshia_Sharma_Resume.pdf" class="btn btn-ghost" id="resumeBtn" target="_blank" rel="noopener">View Resume</a>
+          </div>
+          <ul class="hero-links">
+            <li>
+              <a href="https://github.com/arshiasharma08" target="_blank" rel="noopener">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+                GitHub
+              </a>
+            </li>
+            <li>
+              <a href="https://www.linkedin.com/in/arshia-sharma-31621b357" target="_blank" rel="noopener">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M14.82 0H1.18C.53 0 0 .52 0 1.16v13.68C0 15.48.53 16 1.18 16h13.64c.65 0 1.18-.52 1.18-1.16V1.16C16 .52 15.47 0 14.82 0ZM4.75 13.6H2.38V6h2.37v7.6ZM3.56 4.97c-.76 0-1.38-.62-1.38-1.38 0-.76.62-1.38 1.38-1.38.76 0 1.38.62 1.38 1.38 0 .76-.62 1.38-1.38 1.38ZM13.6 13.6h-2.37V9.9c0-.88-.02-2.02-1.23-2.02-1.24 0-1.43.97-1.43 1.96v3.76H6.2V6h2.28v1.04h.03c.32-.6 1.09-1.23 2.24-1.23 2.4 0 2.85 1.58 2.85 3.63v4.16Z"/></svg>
+                LinkedIn
+              </a>
+            </li>
+            <li>
+              <a href="mailto:arshiasharma08@gmail.com">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M1.5 3h13c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1h-13c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1Zm.5 1.6V12h12V4.6L8 9.2 2 4.6Zm.6-.6L8 8l5.4-4H2.6Z"/></svg>
+                Email
+              </a>
+            </li>
+          </ul>
         </div>
-    </header>
 
-    <main>
-
-        <!-- HERO / SEARCH SECTION -->
-        <section class="hero" id="search">
-            <div class="container">
-                <div class="hero-tag">
-                    <span class="tag-dot"></span>
-                    Audio intelligence · v2.0
-                </div>
-
-                <h1 class="hero-title">
-                    The music engine that
-                    <span class="gradient-text">understands sound</span>.
-                </h1>
-
-                <p class="hero-sub">
-                    Search across 250+ curated tracks. Get recommendations powered by weighted
-                    audio-feature similarity. Classify mood, compare songs, and explore the
-                    sonic shape of your library.
-                </p>
-
-                <!-- Search -->
-                <form class="search-shell" id="searchForm" autocomplete="off" onsubmit="return false">
-                    <span class="search-icon" aria-hidden="true">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                    </span>
-                    <input
-                        type="text"
-                        id="searchInput"
-                        class="search-input"
-                        placeholder="Search by title or artist…"
-                        spellcheck="false"
-                    >
-                    <button type="submit" id="searchBtn" class="btn btn-primary">
-                        <span>Analyze</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                    </button>
-                </form>
-
-                <div class="hero-chips">
-                    <span class="chip-label">Try</span>
-                    <button class="chip" data-query="levitating">levitating</button>
-                    <button class="chip" data-query="blinding lights">blinding lights</button>
-                    <button class="chip" data-query="driver license">driver license</button>
-                    <button class="chip" data-query="the weeknd">the weeknd</button>
-                </div>
-
-                <!-- Floating orb + waveform visual -->
-                <div class="hero-visual" aria-hidden="true">
-                    <div class="orb">
-                        <div class="orb-core"></div>
-                        <div class="orb-ring orb-ring-1"></div>
-                        <div class="orb-ring orb-ring-2"></div>
-                    </div>
-                </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="code-card">
+            <div class="code-card-topbar">
+              <div class="code-dots"><span></span><span></span><span></span></div>
+              <div class="code-tab">arshia.json</div>
             </div>
-        </section>
-
-        <!-- SEARCH RESULTS SECTION -->
-        <section id="results" class="results hidden">
-            <div class="container">
-                <h2 class="results-title">Search Results</h2>
-                <div id="resultsList" class="results-grid"></div>
+            <pre class="code-body"><code><span class="ln">1</span><span class="tok-brace">{</span>
+<span class="ln">2</span>  <span class="tok-key">"school"</span>: <span class="tok-str">"Purdue University"</span>,
+<span class="ln">3</span>  <span class="tok-key">"major"</span>: <span class="tok-str">"Data Science"</span>,
+<span class="ln">4</span>  <span class="tok-key">"class_of"</span>: <span class="tok-num">2030</span>,
+<span class="ln">5</span>  <span class="tok-key">"interests"</span>: [
+<span class="ln">6</span>    <span class="tok-str">"machine learning"</span>,
+<span class="ln">7</span>    <span class="tok-str">"data engineering"</span>,
+<span class="ln">8</span>    <span class="tok-str">"software development"</span>
+<span class="ln">9</span>  ],
+<span class="ln">10</span>  <span class="tok-key">"currently"</span>: <span class="tok-str">"building &amp; learning</span><span class="cursor">▌</span><span class="tok-str">"</span>
+<span class="ln">11</span><span class="tok-brace">}</span></code></pre>
+            <div class="code-card-footer">
+              <span class="status-dot"></span> currently building
             </div>
-        </section>
-
-        <!-- SELECTED SONG DETAIL SECTION -->
-        <section id="song-detail" class="song-detail hidden">
-            <div class="container">
-                <div id="selectedSongDetail" class="song-detail-content"></div>
-            </div>
-        </section>
-
-        <!-- RECOMMENDATIONS SECTION -->
-        <section id="recommendationsSection" class="recommendations-section hidden">
-            <div class="container">
-                <h3 class="section-title">Similar Tracks</h3>
-                <div id="recommendationsList" class="recommendations-grid"></div>
-            </div>
-        </section>
-
-        <!-- INSIGHTS SECTION -->
-        <section id="insightsSection" class="insights-section hidden">
-            <div class="container">
-                <h3 class="section-title">Insights</h3>
-                <div id="insightsList" class="insights-list"></div>
-            </div>
-        </section>
-
-        <!-- MOODS SECTION -->
-        <section class="moods-section" id="moods">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Mood Classification</h2>
-                    <p class="section-subtext">Explore songs organized by vibe and energy</p>
-                </div>
-                <div id="moodGrid" class="mood-grid"></div>
-                
-                <!-- MOOD FILTER RESULTS -->
-                <div id="moodFilterResults" class="mood-filter-results hidden">
-                    <div class="mood-results-header">
-                        <h3 id="moodResultsTitle"></h3>
-                        <button id="clearMoodFilterBtn" class="btn btn-secondary btn-small">
-                            ✕ Clear
-                        </button>
-                    </div>
-                    <div id="moodFilterGrid" class="mood-filter-grid"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ANALYTICS DASHBOARD SECTION -->
-        <section class="dashboard-section" id="dashboard">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Analytics Dashboard</h2>
-                    <p class="section-subtext">Collection insights and audio feature distributions</p>
-                </div>
-
-                <!-- Stats Grid -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalSongs">250</div>
-                        <div class="stat-label">Total tracks</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="avgEnergy">0.00</div>
-                        <div class="stat-label">Avg energy</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="avgDanceability">0.00</div>
-                        <div class="stat-label">Avg danceability</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="avgTempo">0</div>
-                        <div class="stat-label">Avg tempo</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="avgPopularity">0</div>
-                        <div class="stat-label">Avg popularity</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="commonMood">—</div>
-                        <div class="stat-label">Most common mood</div>
-                    </div>
-                </div>
-
-                <!-- Distribution Charts -->
-                <div class="charts-row">
-                    <div class="chart-card">
-                        <h4>Tempo Distribution</h4>
-                        <div id="tempoChart" class="chart"></div>
-                    </div>
-                    <div class="chart-card">
-                        <h4>Energy Distribution</h4>
-                        <div id="energyChart" class="chart"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- BATTLE SECTION -->
-        <section class="battle-section" id="battle">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Song Battle</h2>
-                    <p class="section-subtext">Head-to-head track comparison</p>
-                </div>
-
-                <div class="battle-inputs">
-                    <div class="battle-group">
-                        <label for="song1">Song 1</label>
-                        <select id="song1" class="select-input">
-                            <option value="">Select a song…</option>
-                        </select>
-                    </div>
-                    <div class="vs">vs</div>
-                    <div class="battle-group">
-                        <label for="song2">Song 2</label>
-                        <select id="song2" class="select-input">
-                            <option value="">Select a song…</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <button id="battleBtn" class="btn btn-primary">Compare</button>
-                
-                <div id="battleResults" class="battle-results hidden"></div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p>Sonar v2.0 · AI Music Intelligence Platform</p>
+          </div>
         </div>
-    </footer>
+      </div>
 
-    <!-- LOADING INDICATOR -->
-    <div id="loadingIndicator" class="loading-indicator hidden">
-        <div class="spinner"></div>
-    </div>
+      <div class="currently-strip" role="note" aria-label="Currently">
+        <span class="currently-label">Currently</span>
+        <span class="currently-items">CS 18000&nbsp;&nbsp;&middot;&nbsp;&nbsp;The Data Mine&nbsp;&nbsp;&middot;&nbsp;&nbsp;Java&nbsp;&nbsp;&middot;&nbsp;&nbsp;Building side projects&nbsp;&nbsp;&middot;&nbsp;&nbsp;Purdue '30</span>
+      </div>
+    </section>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <!-- ===== ABOUT ===== -->
+    <section class="section section-alt" id="about">
+      <div class="section-inner about-grid">
+        <div class="section-head">
+          <p class="section-eyebrow">01 / About</p>
+          <h2 class="section-title">About Me</h2>
+        </div>
+        <div class="about-body">
+          <p>I'm a Data Science student at Purdue University and part of The Data Mine Learning Community. I'm interested in machine learning, data engineering, and software development, especially projects that turn data into useful, interactive tools.</p>
+          <p>I'm currently strengthening my programming and data science foundation while continuing to build projects outside of class.</p>
+          <ul class="about-tags">
+            <li>Purdue Data Science, Class of 2030</li>
+            <li>The Data Mine</li>
+            <li>Actively building</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== EXPERIENCE ===== -->
+    <section class="section" id="experience">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="section-eyebrow">02 / Experience</p>
+          <h2 class="section-title">Experience</h2>
+        </div>
+
+        <div class="timeline">
+          <article class="exp-card">
+            <div class="exp-meta">
+              <span class="exp-dates">Jun 2025 &ndash; Aug 2025</span>
+              <span class="exp-location">Frisco, TX</span>
+            </div>
+            <h3 class="exp-role">Software Intern</h3>
+            <p class="exp-company">NexGen Tech Solutions</p>
+            <ul class="exp-list">
+              <li>Built and tested data ingestion and transformation workflows using Python, Spark SQL, and Azure Data Lake</li>
+              <li>Debugged data and code issues with Git/GitHub while contributing to tasks in an Agile development environment</li>
+              <li>Created and updated dashboards to track data trends, project metrics, and reporting results</li>
+            </ul>
+            <ul class="tag-row">
+              <li>Python</li>
+              <li>Spark SQL</li>
+              <li>Azure</li>
+              <li>Azure Data Lake</li>
+              <li>Git</li>
+              <li>GitHub</li>
+              <li>Power BI</li>
+            </ul>
+          </article>
+
+          <article class="exp-card">
+            <div class="exp-meta">
+              <span class="exp-dates">Jun 2024 &ndash; Jul 2024</span>
+              <span class="exp-location">Austin, TX</span>
+            </div>
+            <h3 class="exp-role">Data Science Intern</h3>
+            <p class="exp-company">Zimetrics LLC</p>
+            <ul class="exp-list">
+              <li>Developed and tested machine learning models in Python and TensorFlow for forecasting and lead-scoring applications</li>
+              <li>Prepared datasets through data cleaning, feature selection, and model evaluation</li>
+              <li>Built interactive Power BI dashboards to visualize trends, performance metrics, and business insights</li>
+            </ul>
+            <ul class="tag-row">
+              <li>Python</li>
+              <li>TensorFlow</li>
+              <li>Pandas</li>
+              <li>Power BI</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PROJECTS ===== -->
+    <section class="section section-alt section-projects" id="projects">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="section-eyebrow">03 / Projects</p>
+          <h2 class="section-title">Selected Projects</h2>
+        </div>
+
+        <div class="projects-list">
+
+          <article class="project-card project-media-right">
+            <div class="project-media">
+              <img
+                src="sonar.png"
+                alt="Sonar.ai landing screen showing search bar and audio intelligence branding"
+                class="project-screenshot"
+                loading="lazy"
+              >
+            </div>
+            <div class="project-info">
+              <p class="project-number">01 / Sonar.ai</p>
+              <p class="project-category">Audio Intelligence Platform</p>
+              <h3 class="project-name">Sonar.ai</h3>
+              <p class="project-desc">
+                An interactive music analytics platform that uses audio-feature data
+                to recommend similar tracks, classify song moods, visualize musical
+                characteristics, and compare songs using feature-based similarity.
+              </p>
+              <ul class="tag-row">
+                <li>Python</li>
+                <li>Flask</li>
+                <li>JavaScript</li>
+                <li>HTML/CSS</li>
+              </ul>
+              <div class="project-actions">
+                <a class="project-link" href="https://spotify-song-analyzer.onrender.com/" target="_blank" rel="noopener">Live Demo <span aria-hidden="true">&#8599;</span></a>
+                <a class="project-link" href="https://github.com/arshiasharma08/sonar-music-ai" target="_blank" rel="noopener">GitHub <span aria-hidden="true">&#8599;</span></a>
+              </div>
+            </div>
+          </article>
+
+          <article class="project-card project-media-left">
+            <div class="project-media">
+              <img
+                src="research-matchmaker.png"
+                alt="Purdue Research Matchmaker landing screen with a research interest search bar"
+                class="project-screenshot"
+                loading="lazy"
+              >
+            </div>
+            <div class="project-info">
+              <p class="project-number">02 / Research Matchmaker</p>
+              <p class="project-category">Research Discovery Platform</p>
+              <h3 class="project-name">Purdue Research Matchmaker</h3>
+              <p class="project-desc">
+                A research discovery platform that helps students explore Purdue
+                faculty and research opportunities through keyword-based matching,
+                filtering, faculty discovery, and outreach email generation.
+              </p>
+              <ul class="tag-row">
+                <li>Python</li>
+                <li>Flask</li>
+                <li>JavaScript</li>
+                <li>HTML/CSS</li>
+              </ul>
+              <div class="project-actions">
+                <a class="project-link" href="https://github.com/arshiasharma08/purdue_research" target="_blank" rel="noopener">GitHub <span aria-hidden="true">&#8599;</span></a>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SKILLS ===== -->
+    <section class="section" id="skills">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="section-eyebrow">04 / Skills</p>
+          <h2 class="section-title">Skills</h2>
+        </div>
+
+        <div class="skills-grid">
+          <div class="skill-group">
+            <h3 class="skill-label">Languages</h3>
+            <p class="skill-items">Python &middot; SQL &middot; Java &middot; JavaScript &middot; HTML/CSS</p>
+          </div>
+          <div class="skill-group">
+            <h3 class="skill-label">Data + ML</h3>
+            <p class="skill-items">Pandas &middot; TensorFlow &middot; Spark SQL &middot; Machine Learning &middot; Data Visualization</p>
+          </div>
+          <div class="skill-group">
+            <h3 class="skill-label">Tools + Platforms</h3>
+            <p class="skill-items">Git &middot; GitHub &middot; Azure &middot; Azure Data Lake &middot; Power BI &middot; Render</p>
+          </div>
+          <div class="skill-group">
+            <h3 class="skill-label">Web</h3>
+            <p class="skill-items">Flask &middot; HTML/CSS &middot; JavaScript</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== COURSEWORK + EDUCATION ===== -->
+    <section class="section section-alt" id="coursework">
+      <div class="section-inner coursework-grid">
+        <div>
+          <div class="section-head">
+            <p class="section-eyebrow">05 / Coursework</p>
+            <h2 class="section-title">Coursework</h2>
+          </div>
+          <ul class="course-list">
+            <li>
+              <span class="course-code">CS 18000</span>
+              <span class="course-name">Problem Solving &amp; Object-Oriented Programming</span>
+            </li>
+            <li>
+              <span class="course-code">CS 19300</span>
+              <span class="course-name">Tools</span>
+            </li>
+            <li>
+              <span class="course-code">TDM 10100</span>
+              <span class="course-name">The Data Mine</span>
+            </li>
+            <li>
+              <span class="course-code">MA 16100</span>
+              <span class="course-name">Calculus I</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="education-card">
+          <h3>Education</h3>
+          <p class="edu-school">Purdue University</p>
+          <p class="edu-detail">West Lafayette, Indiana</p>
+          <p class="edu-detail">B.S. in Data Science</p>
+          <p class="edu-detail">Expected Graduation: May 2030</p>
+          <p class="edu-detail edu-dim">The Data Mine Learning Community</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+    <section class="section section-contact" id="contact">
+      <div class="section-inner">
+        <div class="section-head center">
+          <p class="section-eyebrow">06 / Contact</p>
+          <h2 class="section-title">Get in Touch</h2>
+          <p class="contact-sub">
+            I'm always interested in learning about internships, research opportunities,
+            interesting projects, and new people to build with.
+          </p>
+        </div>
+
+        <ul class="contact-links">
+          <li><a href="mailto:arshiasharma08@gmail.com">Email</a></li>
+          <li><a href="https://www.linkedin.com/in/arshia-sharma-31621b357" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://github.com/arshiasharma08" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="Arshia_Sharma_Resume.pdf" target="_blank" rel="noopener">View Resume</a></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Designed &amp; built by Arshia Sharma</p>
+    <p class="footer-fine">&copy; 2026 Arshia Sharma. All rights reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
